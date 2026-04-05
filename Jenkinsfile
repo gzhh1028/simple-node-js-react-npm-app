@@ -1,30 +1,27 @@
-pipeline {
-    agent {
-        docker {
-            image 'node:6-alpine'
-            args '-p 3000:3000'
-        }
-    }
-    environment { 
-        CI = 'true'
-    }
-    stages {
-        stage('Build') {
-            steps {
-                sh 'npm install'
-            }
-        }
-        stage('Test') {
-            steps {
-                sh './jenkins/scripts/test.sh'
-            }
-        }
-        stage('Deliver') { 
-            steps {
-                sh './jenkins/scripts/deliver.sh' 
-                input message: 'Finished using the web site? (Click "Proceed" to continue)' 
-                sh './jenkins/scripts/kill.sh' 
-            }
-        }
+stage('Deploy') {
+    steps {
+        sshPublisher(publishers: [
+            sshPublisherDesc(
+                configName: 'aliyun-s1',
+                transfers: [
+                    sshTransfer(
+                        sourceFiles: 'target/*.jar,Dockerfile',
+                        remoteDirectory: 'hello-maven'
+                    )
+                ],
+                // 👇 👇 👇 正确格式！没有警告，能正常远程执行！
+                execCommands: [
+                    sshCommand(command: '''
+                        cd /home/jenkins/workspace/hello-maven
+                        docker stop hellomaven || true
+                        docker rm hellomaven || true
+                        docker rmi nzc/hellomaven:1.0 || true
+                        docker build -t nzc/hellomaven:1.0 .
+                        docker run -d -p 880:8080 --name hellomaven nzc/hellomaven:1.0
+                        echo "✅ 部署成功！端口：880"
+                    ''')
+                ]
+            )
+        ])
     }
 }
