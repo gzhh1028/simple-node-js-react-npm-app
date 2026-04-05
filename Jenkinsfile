@@ -1,28 +1,17 @@
 pipeline {
     agent any
     stages {
-        stage('Install') {
-            steps {
-                sh 'npm install'
-            }
-        }
-        stage('Build') {
-            steps {
-                sh 'npm run build'
-            }
-        }
-        // 前端项目不需要 Docker 构建！
-        // 只需要上传 dist/ 或 build/ 文件夹
-        stage('Deploy') {
+        // 只上传代码！不做任何构建！
+        stage('Deploy to Server') {
             steps {
                 sshPublisher(
                     publishers: [
                         sshPublisherDesc(
-                            configName: 'aliyun-s1',
+                            configName: "aliyun-s1",
                             transfers: [
                                 sshTransfer(
-                                    sourceFiles: 'build/**,dist/**', // 前端打包产物
-                                    remoteDirectory: 'node-app'
+                                    sourceFiles: "**",
+                                    remoteDirectory: "node-app"
                                 )
                             ]
                         )
