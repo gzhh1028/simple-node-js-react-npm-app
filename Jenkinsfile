@@ -1,7 +1,7 @@
 pipeline {
     agent any
     stages {
-        stage('Deploy & Build on Remote Server') {
+        stage('Deploy') {
             steps {
                 sshPublisher(
                     publishers: [
@@ -14,12 +14,10 @@ pipeline {
                                 )
                             ],
                             execCommands: [
-                                sshCommand(command: '''
-                                    cd /root/node-app
-                                    npm install
-                                    npm run build
-                                    echo "✅ 编译完成！"
-                                ''')
+                                "cd /root/node-app",
+                                "npm install",
+                                "npm run build",
+                                "echo 构建完成！"
                             ]
                         )
                     ]
