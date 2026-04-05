@@ -14,7 +14,7 @@ pipeline {
                                 )
                             ],
                             execCommands: [
-                                "cd /root/node-app",
+                                "cd /home/jenkins/workspace/node-app",
                                 "npm install",
                                 "npm run build",
                                 "echo 构建完成！"
