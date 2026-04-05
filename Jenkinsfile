@@ -1,15 +1,18 @@
-// 这是 声明式流水线 → 必须这样写！
 pipeline {
     agent any
-    tools {
-        maven 'M3'
-    }
     stages {
-        stage('Build') {
+        stage('Install') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'npm install'
             }
         }
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+        // 前端项目不需要 Docker 构建！
+        // 只需要上传 dist/ 或 build/ 文件夹
         stage('Deploy') {
             steps {
                 sshPublisher(
@@ -18,20 +21,9 @@ pipeline {
                             configName: 'aliyun-s1',
                             transfers: [
                                 sshTransfer(
-                                    sourceFiles: 'target/*.jar,Dockerfile',
-                                    remoteDirectory: 'hello-maven'
+                                    sourceFiles: 'build/**,dist/**', // 前端打包产物
+                                    remoteDirectory: 'node-app'
                                 )
-                            ],
-                            execCommands: [
-                                sshCommand(command: '''
-                                    cd /home/jenkins/workspace/hello-maven
-                                    docker stop hellomaven || true
-                                    docker rm hellomaven || true
-                                    docker rmi nzc/hellomaven:1.0 || true
-                                    docker build -t nzc/hellomaven:1.0 .
-                                    docker run -d -p 880:8080 --name hellomaven nzc/hellomaven:1.0
-                                    echo "✅ 部署成功！"
-                                ''')
                             ]
                         )
                     ]
